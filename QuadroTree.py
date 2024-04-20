@@ -1,5 +1,5 @@
 class Point:
-    def __int__(self, x, y):
+    def __init__(self, x, y):
         self.x = x
         self.y = y
 
@@ -57,6 +57,8 @@ class QTree:
         x_mid = (node.x_low_border + node.x_high_border) / 2
         y_mid = (node.y_low_border + node.y_high_border) / 2
 
+        # node.points = ['-', '-', '-', '-']
+
         node.children = [
             Node(node.x_low_border, x_mid, node.y_low_border, y_mid),
             Node(x_mid, node.x_high_border, node.y_low_border, y_mid),
@@ -89,5 +91,21 @@ class QTree:
             for child in node.children:
                 self.output(child, level + 1)
 
+    def clear_points_in_tree(self):
+        self._clear_points_in_tree(self.root)
+
+    def _clear_points_in_tree(self, node):
+        if node.children:
+            node.points = []
+            for child in node.children:
+                self._clear_points_in_tree(child)
 
 
+tree = QTree()
+test = open('test.txt', 'r')
+array = list(str(*test).split(','))
+for el in array:
+    coords = list(el.split(' '))
+    tree.insert(Point(float(coords[0]), float(coords[1])))
+tree.clear_points_in_tree()
+tree.output()
