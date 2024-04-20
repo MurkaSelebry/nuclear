@@ -1,7 +1,12 @@
+import numpy as np
+import json
+
+
 class Point:
     def __init__(self, x, y):
         self.x = x
         self.y = y
+        self.red = False
 
 
 class Node:
@@ -12,13 +17,15 @@ class Node:
         self.y_high_border = y_high_border
         self.points = []
         self.children = []
-        self.red = False
 
     def get_border(self):
         return [[self.x_low_border, self.x_high_border], [self.y_low_border, self.y_high_border]]
 
 
 class QTree:
+
+    g_count = 0
+
     def __init__(self, max_points=4):
         self.root = Node(-90, 90, -180, 180)
         self.root.children = [Node(-90, 0, 0, 180),
@@ -84,7 +91,7 @@ class QTree:
         if node.points:
             print(' ' * (level + 1) + 'Points:')
             for point in node.points:
-                print(' ' * (level + 2) + f'({point.x}, {point.y})')
+                print(' ' * (level + 2) + f'({point.x}, {point.y}, {point.red})')
 
         # Recursively output the children of the node
         if node.children:
@@ -100,12 +107,58 @@ class QTree:
             for child in node.children:
                 self._clear_points_in_tree(child)
 
+    def distance(self, pt_1, pt_2):
+        pt_1 = np.array((pt_1.x, pt_1.y))
+        pt_2 = np.array((pt_2.x, pt_2.y))
+        return np.linalg.norm(pt_1 - pt_2)
+
+    def dfs(self, point):
+        self._dfs(self.root, point)
+
+    def _dfs(self, node, point):
+        if not (node.x_low_border <= point.x <= node.x_high_border and
+                node.y_low_border <= point.y <= node.y_high_border):
+            return False
+
+        if node.points:
+            min_distance = [float('inf'), 0]
+            for number in range(len(node.points)):
+                if min_distance[0] < self.distance(point, node.points[number]):
+                    min_distance[0] = self.distance(point, node.points[number])
+                    min_distance[1] = number
+            node.points[min_distance[1]].red = True
+            self.g_count += 1
+            print("Исходная - ", point.x, point.y)
+            print("Ближайшая - ", node.points[min_distance[1]].x, node.points[min_distance[1]].y)
+            return True
+
+        for child in node.children:
+            if self._dfs(child, point):
+                return True
+
+        return False
+
 
 tree = QTree()
-test = open('test.txt', 'r')
-array = list(str(*test).split(','))
+test_blue = open('test_blue.txt', 'r')
+array = list(str(*test_blue).split(','))
 for el in array:
     coords = list(el.split(' '))
     tree.insert(Point(float(coords[0]), float(coords[1])))
 tree.clear_points_in_tree()
+
+with open('test_red.geojson', 'r', encoding='utf-8') as file:
+    data = json.load(file)
+
+red_length = len(data['features'])
+
+count = 0
+
+for i in range(red_length):
+    for row in data['features'][i]['geometry']['coordinates']:
+        for el in row:
+            tree.dfs(Point(el[1], el[0]))
+            count += 1
+
 tree.output()
+print(count, tree.g_count)

@@ -3,6 +3,7 @@ import geojson
 import shapely.wkt
 # import Geohash
 import hashlib
+import json
 
 """
 def geo_hash(latitude, longitude, precision=12):
@@ -21,17 +22,15 @@ print((geo_hash(20.25736, 54.94998)))
 
 """
 
-df = gpd.read_file('blue.geojson')
-print(df.shape)
-print(df.keys())
-print(df['geometry'][0])
+# df = gpd.read_file('red_test.geojson')
+# print(df['geometry'][0])
 
-with open('blue.geojson') as file:
-    data = geojson.load(file)
+with open('test_red.geojson', 'r', encoding='utf-8') as file:
+    data = json.load(file)
 
-blue_length = len(data['features'])
+red_length = len(data['features'])
 
-for i in range(blue_length):
+for i in range(red_length):
     for row in data['features'][i]['geometry']['coordinates']:
         for el in row:
             print(el)
