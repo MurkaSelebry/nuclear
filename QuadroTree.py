@@ -196,6 +196,3 @@ class QTree:
                 if elem.x == point.x and elem.y == point.y:
                     return elem.attributes
         return None
-
-
-

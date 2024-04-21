@@ -45,20 +45,31 @@ green = dict()
 green['type'] = blue['type']
 green['name'] = blue['name']
 green['crs'] = blue['crs']
-green['features'] = blue['features']
+green['features'] = list.copy(blue['features'])
+error_indexes = []
 for i in range(blue_length):
     for row in blue['features'][i]['geometry']['coordinates']:
         flag = True
         for el in row:
             new_attributes = tree.find_with_dfs(tree.root, Point(el[1], el[0]))
             if new_attributes:
-                print(new_attributes)
                 green['features'][i]['properties'] = blue['features'][i]['properties']
                 green['features'][i]['properties'].update(new_attributes)
                 flag = False
                 break
         if not flag:
             break
+
+    if len(green['features'][i]['properties']) < 2:
+        error_indexes.append(i)
+error_dict = dict()
+error_dict['not_indexed_roads'] = []
+for index in error_indexes:
+    error_dict['not_indexed_roads'].append(green['features'][index])
+
+with open('errors.json', 'w', encoding='utf-8') as file:
+    json.dump(error_dict, file)
+
 #'../j/green.geojson'
 with open(green_path, 'w', encoding='utf-8') as file:
     json.dump(green, file)
