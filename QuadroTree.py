@@ -5,10 +5,11 @@ import json
 
 
 class Point:
-    def __init__(self, x, y):
+    def __init__(self, x, y, attributes=None):
         self.x = x
         self.y = y
         self.red = False
+        self.attributes = attributes
 
 
 class Node:
@@ -93,6 +94,7 @@ class QTree:
             print(' ' * (level + 1) + 'Points:')
             for point in node.points:
                 print(' ' * (level + 2) + f'({point.x}, {point.y}, {point.red})')
+                print(point.attributes)
 
         # Recursively output the children of the node
         if node.children:
@@ -114,7 +116,7 @@ class QTree:
         return np.linalg.norm(pt_1 - pt_2)
 
     def dfs(self, point):
-        self._dfs(self.root, point, 0)
+        return self._dfs(self.root, point, 0)
 
     def _dfs(self, node, point, depth):
         if not (node.x_low_border <= point.x <= node.x_high_border and
@@ -172,13 +174,32 @@ class QTree:
                                 path = [i, j, k, kk]
         if len(path) == 2:
             node.children[path[0]].points[path[1]].red = True
+            node.children[path[0]].points[path[1]].attributes = point.attributes
             return True
         elif len(path) == 3:
             node.children[path[0]].children[path[1]].points[path[2]].red = True
+            node.children[path[0]].children[path[1]].points[path[2]].attributes = point.attributes
             return True
         elif len(path) == 4:
             node.children[path[0]].children[path[1]].children[path[2]].points[path[3]].red = True
+            node.children[path[0]].children[path[1]].children[path[2]].points[path[3]].attributes = point.attributes
             return True
+
+    def find_with_dfs(self, node, point):
+        if not (node.x_low_border <= point.x <= node.x_high_border and
+                node.y_low_border <= point.y <= node.y_high_border):
+            return None
+
+        if node.children:
+            for child in node.children:
+                status = self.find_with_dfs(child, point)
+                if status:
+                    return status
+        else:
+            for elem in node.points:
+                if elem.x == point.x and elem.y == point.y:
+                    return elem.attributes
+        return None
 
 
 tree = QTree()
@@ -211,7 +232,26 @@ red_length = len(red['features'])
 for i in range(red_length):
     for row in red['features'][i]['geometry']['coordinates']:
         for el in row:
-            tree.dfs(Point(el[1], el[0]))
+            tree.dfs(Point(el[1], el[0], red['features'][i]['properties']))
 
-tree.output()
-print(tree.g_count)
+green = dict()
+green['type'] = blue['type']
+green['name'] = blue['name']
+green['crs'] = blue['crs']
+green['features'] = blue['features']
+for i in range(blue_length):
+    for row in blue['features'][i]['geometry']['coordinates']:
+        flag = True
+        for el in row:
+            new_attributes = tree.find_with_dfs(tree.root, Point(el[1], el[0]))
+            if new_attributes:
+                print(new_attributes)
+                green['features'][i]['properties'] = blue['features'][i]['properties']
+                green['features'][i]['properties'].update(new_attributes)
+                flag = False
+                break
+        if not flag:
+            break
+
+with open('green.geojson', 'w', encoding='utf-8') as file:
+    json.dump(green, file)
