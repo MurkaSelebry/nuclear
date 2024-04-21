@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+                <form method=post enctype=multipart/form-data>
+
+        <!-- Part 1: Blue file upload -->
+        <div class="form-container blue">
+            <h2>Blue File Upload</h2>
+                <div class="custom-file mb-3">
+                    <input type="file" class="custom-file-input" id="customFile1" name='file1'>
+                    <label class="custom-file-label" for="customFile1">Choose file 1</label>
+                </div>
+        </div>
+
+        <!-- Part 2: Red file upload -->
+        <div class="form-container red">
+            <h2>Red File Upload</h2>
+                <div class="custom-file mb-3">
+                    <input type="file" class="custom-file-input" id="customFile2" name='file2'>
+                    <label class="custom-file-label" for="customFile2">Choose file 2</label>
+                </div>
+        </div>
+
+        <!-- Part 3: Green file upload -->
+       <!-- Part 3: Green file upload -->
+<!-- Part 3: Green file upload -->
+<div class="form-container green">
+    <h2>Green File Download</h2>
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+            <label class="form-check-label" for="flexCheckDefault">
+                I want to upload files
+            </label>
+        </div>
+        <button type="submit" class="btn btn-success btn-block upload-btn" name="get_result" value=Upload disabled>Get Result</button>
+
+</div>
+        </form>
+
+    </div>
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>

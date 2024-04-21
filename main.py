@@ -1,12 +1,13 @@
 from QuadroTree import QTree, Point
 from sys import argv
 import json
+
 #'C:\\Users\\aleks\PycharmProjects\pythonProject\j\\blue.geojson'
 #'C:\\Users\\aleks\PycharmProjects\pythonProject\j\\red.geojson'
 #'C:\\Users\\aleks\PycharmProjects\pythonProject\j\\ggg.geojson'
-blue_path = argv[1]
-red_path = argv[2]
-green_path = argv[3]
+blue_path = globals().get('blue_path', 'C:\\Users\\aleks\PycharmProjects\pythonProject\j\\blue.geojson')
+red_path = globals().get('red_path', 'C:\\Users\\aleks\PycharmProjects\pythonProject\j\\red.geojson')
+green_path = globals().get('green_path', 'C:\\Users\\aleks\PycharmProjects\pythonProject\j\\green.geojson')
 tree = QTree()
 #'../j/blue.geojson'
 with open(blue_path, 'r', encoding='utf-8') as file:
@@ -73,3 +74,4 @@ with open('errors.json', 'w', encoding='utf-8') as file:
 #'../j/green.geojson'
 with open(green_path, 'w', encoding='utf-8') as file:
     json.dump(green, file)
+
