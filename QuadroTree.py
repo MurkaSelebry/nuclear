@@ -203,7 +203,7 @@ class QTree:
 
 
 tree = QTree()
-with open('blue.geojson', 'r', encoding='utf-8') as file:
+with open('../j/blue.geojson', 'r', encoding='utf-8') as file:
     blue = json.load(file)
 
 blue_length = len(blue['features'])
@@ -253,5 +253,5 @@ for i in range(blue_length):
         if not flag:
             break
 
-with open('green.geojson', 'w', encoding='utf-8') as file:
+with open('../j/green.geojson', 'w', encoding='utf-8') as file:
     json.dump(green, file)
