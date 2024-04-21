@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import json
 
@@ -24,15 +26,14 @@ class Node:
 
 class QTree:
 
-    g_count = 0
-
-    def __init__(self, max_points=4):
-        self.root = Node(-90, 90, -180, 180)
-        self.root.children = [Node(-90, 0, 0, 180),
-                              Node(0, 90, 0, 180),
-                              Node(-90, 0, -180, 0),
-                              Node(0, 90, -180, 0)]
+    def __init__(self, max_points=7):
+        self.root = Node(-180, 180, -90, 90)
+        self.root.children = [Node(-180, 0, 0, 90),
+                              Node(0, 180, 0, 90),
+                              Node(-180, 0, -90, 0),
+                              Node(0, 180, -90, 0)]
         self.max_points = max_points
+        self.g_count = 0
 
     def insert(self, point):
         self._insert(self.root, point)
@@ -113,52 +114,104 @@ class QTree:
         return np.linalg.norm(pt_1 - pt_2)
 
     def dfs(self, point):
-        self._dfs(self.root, point)
+        self._dfs(self.root, point, 0)
 
-    def _dfs(self, node, point):
+    def _dfs(self, node, point, depth):
         if not (node.x_low_border <= point.x <= node.x_high_border and
                 node.y_low_border <= point.y <= node.y_high_border):
-            return False
+            return 0
 
-        if node.points:
+        if not node.children:
+            '''
             min_distance = [float('inf'), 0]
             for number in range(len(node.points)):
                 if min_distance[0] < self.distance(point, node.points[number]):
                     min_distance[0] = self.distance(point, node.points[number])
                     min_distance[1] = number
-            node.points[min_distance[1]].red = True
-            self.g_count += 1
-            print("Исходная - ", point.x, point.y)
-            print("Ближайшая - ", node.points[min_distance[1]].x, node.points[min_distance[1]].y)
-            return True
+            if node.points:
+                node.points[min_distance[1]].red = True
+                self.g_count += 1
+                print("Исходная - ", point.x, point.y)
+                print("Ближайшая - ", node.points[min_distance[1]].x, node.points[min_distance[1]].y)
+            '''
+            return depth
 
         for child in node.children:
-            if self._dfs(child, point):
-                return True
+            status = self._dfs(child, point, depth + 1)
+            if 1 <= status - depth <= 3:
+                # print("xyi")
+                self.g_count += 1
+                if self.find(node, point):
+                    return True
+                return status
+            elif status > 0:
+                return status
 
         return False
 
+    def find(self, node, point):
+        path = []
+        min_distance = float('inf')
+        for i in range(len(node.children)):
+            if node.children[i].points:
+                for ii in range(len(node.children[i].points)):
+                    if self.distance(node.children[i].points[ii], point) < min_distance:
+                        min_distance = self.distance(node.children[i].points[ii], point)
+                        path = [i, ii]
+            for j in range(len(node.children[i].children)):
+                if node.children[i].children[j].points:
+                    for jj in range(len(node.children[i].children[j].points)):
+                        if self.distance(node.children[i].children[j].points[jj], point) < min_distance:
+                            min_distance = self.distance(node.children[i].children[j].points[jj], point)
+                            path = [i, j, jj]
+                for k in range(len(node.children[i].children[j].children)):
+                    if node.children[i].children[j].children[k].points:
+                        for kk in range(len(node.children[i].children[j].children[k].points)):
+                            if self.distance(node.children[i].children[j].children[k].points[kk], point) < min_distance:
+                                min_distance = self.distance(node.children[i].children[j].children[k].points[kk], point)
+                                path = [i, j, k, kk]
+        if len(path) == 2:
+            node.children[path[0]].points[path[1]].red = True
+            return True
+        elif len(path) == 3:
+            node.children[path[0]].children[path[1]].points[path[2]].red = True
+            return True
+        elif len(path) == 4:
+            node.children[path[0]].children[path[1]].children[path[2]].points[path[3]].red = True
+            return True
+
 
 tree = QTree()
+with open('blue.geojson', 'r', encoding='utf-8') as file:
+    blue = json.load(file)
+
+blue_length = len(blue['features'])
+
+for i in range(blue_length):
+    for row in blue['features'][i]['geometry']['coordinates']:
+        for el in row:
+            tree.insert(Point(float(el[1]), float(el[0])))
+
+'''
 test_blue = open('test_blue.txt', 'r')
 array = list(str(*test_blue).split(','))
 for el in array:
     coords = list(el.split(' '))
     tree.insert(Point(float(coords[0]), float(coords[1])))
+'''
+
 tree.clear_points_in_tree()
+# tree.output()
 
-with open('test_red.geojson', 'r', encoding='utf-8') as file:
-    data = json.load(file)
+with open('red.geojson', 'r', encoding='utf-8') as file:
+    red = json.load(file)
 
-red_length = len(data['features'])
-
-count = 0
+red_length = len(red['features'])
 
 for i in range(red_length):
-    for row in data['features'][i]['geometry']['coordinates']:
+    for row in red['features'][i]['geometry']['coordinates']:
         for el in row:
             tree.dfs(Point(el[1], el[0]))
-            count += 1
 
 tree.output()
-print(count, tree.g_count)
+print(tree.g_count)
